@@ -1,42 +1,87 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:math_expressions/math_expressions.dart';
 
-class CalculatorCubit extends Cubit<String> {
-  CalculatorCubit() : super('0');
+class CounterCubit extends Cubit<String> {
+  CounterCubit() : super(' ');
 
-  void increment(element) => emit(state + element);
+  void openBrackets(String element) {
+    emit(state + '(');
+  }
 
-  /// Decrements the [Cubit] state by 1.
-  void decrement(String element) {
-    List<String> c = element.split("");
+  void closeBrackets(String element) {
+    emit(state + ')');
+  }
 
-    emit(c.removeLast());
+  void reverseMinus(String element) {
+    try {
+      Parser p = Parser();
+      Expression exp = p.parse(state);
+      ContextModel cm = ContextModel();
+      double eval = exp.evaluate(EvaluationType.REAL, cm);
+      if (state.isNotEmpty && exp != null) {
+        final reverse = -eval.abs();
+        emit(element = reverse.toString());
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void reversePlus(String element) {
+    try {
+      Parser p = Parser();
+      Expression exp = p.parse(state);
+      ContextModel cm = ContextModel();
+      double eval = exp.evaluate(EvaluationType.REAL, cm);
+      if (state.isNotEmpty && exp != null) {
+        final reverse = eval.abs();
+        emit(element = reverse.toString());
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void input(String element) {
+    if (state.endsWith('r')) {
+      emit(element = ' ');
+    } else {
+      emit(state + element);
+    }
+  }
+
+  void removeLast() {
+    if (state.isNotEmpty) {
+      String result = state.substring(0, state.length - 1);
+      emit(result);
+      if (state == '') {
+        emit(state + '0');
+      }
+    }
   }
 
   void allClear(String element) {
     emit(element = ' ');
-    emit(element = '');
-    // setState(() {
-    //   history = ' ';
-    //   result = ' ';
-    // });
   }
 
-  void resultValue(String element) {
-    Parser p = Parser();
-    Expression exp = p.parse(element);
-    ContextModel cm = ContextModel();
-    double eval = exp.evaluate(EvaluationType.REAL, cm);
-    if (element.isNotEmpty && exp != null) {
-      emit(eval.toString());
-    } else {
-      print('error');
+  void resultValue(String element, history) {
+    try {
+      Parser p = Parser();
+      Expression exp = p.parse(state);
+      ContextModel cm = ContextModel();
+      double eval = exp.evaluate(EvaluationType.REAL, cm);
+      if (state.isNotEmpty && exp != null) {
+        emit(history + eval.toInt());
+      }
+    } catch (error) {
+      print(error);
+      // emit(element = 'Error');
+      // emit(state = error.toString());
     }
   }
 
   // @override
   // void onTransition(Transition<int> transition) {
-  //   /// Log all state changes (transitions).
   //   print(transition);
   //   super.onTransition(transition);
   // }
